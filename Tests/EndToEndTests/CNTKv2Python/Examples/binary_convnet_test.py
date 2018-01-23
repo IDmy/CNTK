@@ -18,9 +18,19 @@ sys.path.append(os.path.join(abs_path, "..", "..", "..", "..", "Examples", "Exte
 from prepare_test_data import prepare_CIFAR10_data
 from binary_convnet import *
 
-TOLERANCE_ABSOLUTE = 1e-1
+TOLERANCE_ABSOLUTE = 4e-1
 
 def test_binary_convnet_error(device_id):
+    try:
+        C.ops.register_native_user_function(
+                    'DummyNativeBinaryConvolveFunction', 
+                    'Cntk.BinaryConvolution-' + C.__version__.rstrip('+'), 
+                    'CreateBinaryConvolveFunction')
+    except:
+        pytest.skip('Could not find {0} library. Please check if HALIDE_PATH is configured properly and try again'.format('Cntk.BinaryConvolution-' + C.__version__.rstrip('+'), 'Extnsibiliy\BinaryConvolution'))
+      
+
+
     if cntk_device(device_id).type() != DeviceKind_GPU:
         pytest.skip('test only runs on GPU')
     try_set_default_device(cntk_device(device_id))
