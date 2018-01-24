@@ -4,14 +4,17 @@ from cntk.contrib.netopt.custom_convolution_ops import *
 
 # Register the native binary convolution function that calls halide
 # operations internally.
-try:
-    C.ops.register_native_user_function(
-                'NativeBinaryConvolveFunction', 
-                'Cntk.BinaryConvolution-' + C.__version__.rstrip('+'), 
-                'CreateBinaryConvolveFunction')
-except:
-    print("Could not find %s library. Please build %s and try again" % ('Cntk.BinaryConvolution-' + C.__version__.rstrip('+'), "Extnsibiliy\BinaryConvolution"))
-    os._exit(1)
+def register_native_function():
+    try:
+        C.ops.register_native_user_function(
+                    'NativeBinaryConvolveFunction', 
+                    'Cntk.BinaryConvolution-' + C.__version__.rstrip('+'), 
+                    'CreateBinaryConvolveFunction')
+        return True
+    except:
+        print("Could not find %s library. Please build %s and try again" % ('Cntk.BinaryConvolution-' + C.__version__.rstrip('+'), "Extnsibiliy\BinaryConvolution"))
+        return False
+
 
 def binarize_convolution(model, train_function, filter_function = None):
     '''
@@ -50,7 +53,10 @@ def convert_to_native_binary_convolution(model):
                         
     Returns:
         A model with Halid operators.
-    '''
+    '''    
+    if not register_native_function():
+        raise Exception("NativeBinaryConvolveFunction is not registered. The build require Halide library")
+
     bin_conv_filter = (lambda m: type(m) == C.Function 
                 and m.is_block 
                 and m.op_name == 'BinaryConvolution')        
